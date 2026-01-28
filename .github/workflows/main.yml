@@ -1,0 +1,55 @@
+name: Terraform Plan (Drift Detection)
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: terraform
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.6
+
+      - name: Terraform Init
+        run: terraform init -input=false
+
+      - name: Terraform Plan (capture exit code)
+        id: tfplan
+        run: |
+          set +e
+          terraform plan -no-color -detailed-exitcode | tee plan.txt
+          code=${PIPESTATUS[0]}
+          echo "exitcode=$code" >> "$GITHUB_OUTPUT"
+          exit 0
+
+      - name: Upload plan output as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: terraform-plan-output
+          path: terraform/plan.txt
+
+      - name: Summarize result
+        run: |
+          echo "Terraform plan exit code: ${{ steps.tfplan.outputs.exitcode }}"
+          if [ "${{ steps.tfplan.outputs.exitcode }}" = "0" ]; then
+            echo "No drift detected (no changes)."
+          elif [ "${{ steps.tfplan.outputs.exitcode }}" = "2" ]; then
+            echo "Drift detected (changes present)."
+          else
+            echo "Plan error or unexpected exit code."
+          fi
