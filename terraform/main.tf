@@ -5,7 +5,7 @@ terraform {
       version = "~> 2.5"
     }
   }
-}
+}//TEST
 
 provider "local" {}
 
