@@ -1,6 +1,6 @@
 variable "filename" {
   type        = string
-  description = "Path to the file managed by Terraform"
+  description = "Name of the file managed by Terraform"
   default     = "hello.txt"
 }
 

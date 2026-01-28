@@ -10,6 +10,6 @@ terraform {
 provider "local" {}
 
 resource "local_file" "managed_file" {
-  filename = var.filename
+  filename = "${path.module}/${var.filename}"
   content  = var.content
 }
